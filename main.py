@@ -27,8 +27,7 @@ cursor.execute("""
         staff_job TEXT NOT NULL)
 """)
 
-# 2.3. Izveidot tabulu ar pasūtījumiem (orders)
-# Fixed: Added guest_id, removed trailing comma
+#veidojam tabulu ar pasutijumiem
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS orders(
         order_id INTEGER PRIMARY KEY,
@@ -46,7 +45,7 @@ cursor.execute("""
     )
 """)
 
-# 3. Ievietot datus tabulās
+#ievietojam datus tabulas
 cursor.execute("""
 INSERT OR IGNORE INTO guests(guest_id, guest_name, guest_surname)
     VALUES(1, 'Romans', 'Zubenko')
@@ -62,13 +61,12 @@ INSERT OR IGNORE INTO staff(staff_id, staff_name, staff_surname, staff_job)
     VALUES(1, 'Antons', 'Mahno', 'Cleaner')
 """)
 
-# Fixed: Changed table name from 'pasutijumi' to 'orders' and used guest_id
 cursor.execute("""
 INSERT OR IGNORE INTO orders (order_id, guest_id, room_number, order_finished, staff_id)
     VALUES(1, 1, 1, 1, 1)
 """)
 
-# 4. Saņemt datus - Klienti
+#sanemam datus
 cursor.execute("""
     SELECT *
     FROM guests
@@ -79,7 +77,7 @@ print("\nguests")
 for g in guests_list:
     print(g)
 
-# 5. Saņemt datus - Pasūtījumi (Fixed joins and included staff table)
+#sanemam datus
 cursor.execute("""
 SELECT
     guests.guest_name,
@@ -99,6 +97,5 @@ print("\norders")
 for p in pasutijumi:
     print(p)
 
-# Saglabāt un aizvērt
+#saglabajam datubazi
 database.commit()
-database.close()
