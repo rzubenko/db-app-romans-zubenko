@@ -1,10 +1,10 @@
 import sqlite3
 
-# 1. Pieslēgties pie datu bāzes
+#pieslēdzamies pie datu bāzes
 database = sqlite3.connect("hotel.db")
 cursor = database.cursor()
 
-# 2.1. Izveidot tabulu ar klientiem
+#izveidjam tabulu ar klientiem
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS guests(
         guest_id INTEGER PRIMARY KEY,
@@ -12,7 +12,7 @@ cursor.execute("""
         guest_surname TEXT NOT NULL)
 """)
 
-# 2.2. Izveidot tabulu ar istabām
+#izveidjam tabulu ar istabām
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS rooms(
         room_number INTEGER PRIMARY KEY,
