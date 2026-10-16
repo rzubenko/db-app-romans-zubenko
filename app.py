@@ -7,10 +7,9 @@ from funkcijas import (
     add_order
 )
 
-# Ensure tables exist when starting the app
 create_tables()
 
-# --- BUTTON EVENT FUNCTIONS ---
+#pievienojam funkcijas pie pogiem
 
 def handle_add_guest():
     name = guest_name_input.get()
@@ -67,96 +66,99 @@ def handle_add_order():
         order_result.config(text="Kļūda! ID un istabai jābūt cipariem.", fg="red")
 
 
-# --- MAIN WINDOW ---
+#galvenais logs
 window = tk.Tk()
-window.title("Viesnīcas datubāze")
+window.title("Hotel Database")
 window.geometry("600x900")
 
-# Virsraksts
+#virsraksts
 header = tk.Label(
     window,
-    text="Viesnīcas Vadības Sistēma",
+    text="Welcome to our hotel database system",
     font=("Arial", 18, "bold")
 )
 header.pack(pady=10)
 
-# --- 1. GUESTS BLOCK ---
-guest_block = tk.LabelFrame(window, text="Pievienot klientu (Guest)", padx=10, pady=5)
+
+#guests
+guest_block = tk.LabelFrame(window, text="Add a guest", padx=10, pady=5)
 guest_block.pack(fill="x", padx=20, pady=5)
 
-tk.Label(guest_block, text="Vārds").pack()
+tk.Label(guest_block, text="Name").pack()
 guest_name_input = tk.Entry(guest_block, width=50)
 guest_name_input.pack(pady=2)
 
-tk.Label(guest_block, text="Uzvārds").pack()
+tk.Label(guest_block, text="Surname").pack()
 guest_surname_input = tk.Entry(guest_block, width=50)
 guest_surname_input.pack(pady=2)
 
-tk.Button(guest_block, text="Pievienot klientu", command=handle_add_guest).pack(pady=5)
+tk.Button(guest_block, text="Save", command=handle_add_guest).pack(pady=5)
 guest_result = tk.Label(guest_block, text="", fg="green")
 guest_result.pack()
 
-# --- 2. ROOMS BLOCK ---
-room_block = tk.LabelFrame(window, text="Pievienot istabu (Room)", padx=10, pady=5)
+
+#rooms
+room_block = tk.LabelFrame(window, text="Add a room", padx=10, pady=5)
 room_block.pack(fill="x", padx=20, pady=5)
 
-tk.Label(room_block, text="Istabas numurs (Room Number)").pack()
+tk.Label(room_block, text="Room number").pack()
 room_number_input = tk.Entry(room_block, width=50)
 room_number_input.pack(pady=2)
 
-tk.Label(room_block, text="Pieejamība (1 - brīvs, 0 - aizņemts)").pack()
+tk.Label(room_block, text="Availability (1 - available, 0 - not available)").pack()
 room_avail_input = tk.Entry(room_block, width=50)
 room_avail_input.insert(0, "1")  # default value
 room_avail_input.pack(pady=2)
 
-tk.Button(room_block, text="Pievienot istabu", command=handle_add_room).pack(pady=5)
+tk.Button(room_block, text="Save", command=handle_add_room).pack(pady=5)
 room_result = tk.Label(room_block, text="", fg="green")
 room_result.pack()
 
-# --- 3. STAFF BLOCK ---
-staff_block = tk.LabelFrame(window, text="Pievienot personālu (Staff)", padx=10, pady=5)
+
+#staff
+staff_block = tk.LabelFrame(window, text="Add a staff member", padx=10, pady=5)
 staff_block.pack(fill="x", padx=20, pady=5)
 
-tk.Label(staff_block, text="Vārds").pack()
+tk.Label(staff_block, text="Name").pack()
 staff_name_input = tk.Entry(staff_block, width=50)
 staff_name_input.pack(pady=2)
 
-tk.Label(staff_block, text="Uzvārds").pack()
+tk.Label(staff_block, text="Surname").pack()
 staff_surname_input = tk.Entry(staff_block, width=50)
 staff_surname_input.pack(pady=2)
 
-tk.Label(staff_block, text="Amats (Job)").pack()
+tk.Label(staff_block, text="Job").pack()
 staff_job_input = tk.Entry(staff_block, width=50)
 staff_job_input.pack(pady=2)
 
-tk.Button(staff_block, text="Pievienot personālu", command=handle_add_staff).pack(pady=5)
+tk.Button(staff_block, text="Save", command=handle_add_staff).pack(pady=5)
 staff_result = tk.Label(staff_block, text="", fg="green")
 staff_result.pack()
 
-# --- 4. ORDERS BLOCK ---
-order_block = tk.LabelFrame(window, text="Pievienot pasūtījumu (Order)", padx=10, pady=5)
+#orders
+order_block = tk.LabelFrame(window, text="Add an order", padx=10, pady=5)
 order_block.pack(fill="x", padx=20, pady=5)
 
-tk.Label(order_block, text="Klienta ID (Guest ID)").pack()
+tk.Label(order_block, text="Guest ID").pack()
 order_guest_id = tk.Entry(order_block, width=50)
 order_guest_id.pack(pady=2)
 
-tk.Label(order_block, text="Istabas numurs (Room Number)").pack()
+tk.Label(order_block, text="Room number").pack()
 order_room_num = tk.Entry(order_block, width=50)
 order_room_num.pack(pady=2)
 
-tk.Label(order_block, text="Pasūtījums pabeigts? (1 - jā, 0 - nē)").pack()
+tk.Label(order_block, text="Staff ID").pack()
+order_staff_id = tk.Entry(order_block, width=50)
+order_staff_id.pack(pady=2)
+
+tk.Label(order_block, text="An order is complete (1 - yes, 0 - no)").pack()
 order_finished_input = tk.Entry(order_block, width=50)
 order_finished_input.insert(0, "1")
 order_finished_input.pack(pady=2)
 
-tk.Label(order_block, text="Darbinieka ID (Staff ID)").pack()
-order_staff_id = tk.Entry(order_block, width=50)
-order_staff_id.pack(pady=2)
-
-tk.Button(order_block, text="Pievienot pasūtījumu", command=handle_add_order).pack(pady=5)
+tk.Button(order_block, text="Save", command=handle_add_order).pack(pady=5)
 order_result = tk.Label(order_block, text="", fg="green")
 order_result.pack()
 
-# Start application
+#palais aplikāciju
 window.mainloop()

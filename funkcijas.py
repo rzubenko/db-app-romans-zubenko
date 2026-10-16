@@ -2,11 +2,11 @@ import sqlite3
 
 def connect():
     database = sqlite3.connect("hotel.db")
-    # Enable foreign keys support in SQLite
+    #ieslēgam foreign keys support in SQLite
     database.execute("PRAGMA foreign_keys = ON")
     return database
 
-# --- TABLE CREATION ---
+#izveidojam tabulas
 def create_tables():
     database = connect()
     cursor = database.cursor()
@@ -49,7 +49,7 @@ def create_tables():
     database.commit()
     database.close()
 
-# --- ADD FUNCTIONS ---
+#funkcijas
 def add_guest(name, surname):
     database = connect()
     cursor = database.cursor()
@@ -87,7 +87,6 @@ def add_order(guest_id, room_number, order_finished, staff_id):
     database.close()
     return order_id
 
-# --- GET / SELECT FUNCTIONS ---
 def get_guests():
     database = connect()
     cursor = database.cursor()
@@ -133,31 +132,3 @@ def get_orders():
     orders = cursor.fetchall()
     database.close()
     return orders
-
-# --- TEST / EXAMPLE EXECUTION ---
-if __name__ == "__main__":
-    # 1. Initialize tables
-    create_tables()
-    
-    # 2. Add sample data
-    add_guest("Romans", "Zubenko")
-    add_room(1, 1)
-    add_staff("Antons", "Mahno", "Cleaner")
-    add_order(guest_id=1, room_number=1, order_finished=1, staff_id=1)
-    
-    # 3. Print results to verify
-    print("\nKLIENTI:")
-    for g in get_guests():
-        print(g)
-        
-    print("\nISTABAS:")
-    for r in get_rooms():
-        print(r)
-        
-    print("\nPERSONĀLS:")
-    for s in get_staff():
-        print(s)
-        
-    print("\nPASŪTĪJUMI:")
-    for o in get_orders():
-        print(o)
