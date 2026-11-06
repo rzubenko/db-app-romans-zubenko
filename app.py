@@ -9,8 +9,7 @@ from funkcijas import (
 
 create_tables()
 
-#pievienojam funkcijas pie pogiem
-
+# pievienojam funkcijas pie pogām
 def handle_add_guest():
     name = guest_name_input.get()
     surname = guest_surname_input.get()
@@ -66,99 +65,132 @@ def handle_add_order():
         order_result.config(text="Kļūda! ID un istabai jābūt cipariem.", fg="red")
 
 
-#galvenais logs
+# galvenais logs
 window = tk.Tk()
 window.title("Hotel Database")
-window.geometry("600x900")
+window.geometry("620x700")
 
-#virsraksts
+# Canvas un Scrollbar izveide
+main_canvas = tk.Canvas(window, borderwidth=0, highlightthickness=0)
+scrollbar = tk.Scrollbar(window, orient="vertical", command=main_canvas.yview)
+scrollable_frame = tk.Frame(main_canvas)
+
+scrollable_frame.bind(
+    "<Configure>",
+    lambda e: main_canvas.configure(
+        scrollregion=main_canvas.bbox("all")
+    )
+)
+
+# Piesaistām rāmi pie audekla vidusdaļas (centrēšanai)
+canvas_window = main_canvas.create_window((310, 0), window=scrollable_frame, anchor="n")
+
+def configure_canvas(event):
+    main_canvas.itemconfig(canvas_window, width=event.width)
+    main_canvas.coords(canvas_window, event.width / 2, 0)
+
+main_canvas.bind("<Configure>", configure_canvas)
+main_canvas.configure(yscrollcommand=scrollbar.set)
+
+main_canvas.pack(side="left", fill="both", expand=True)
+scrollbar.pack(side="right", fill="y")
+
+# Peles ritināšanas atbalsts
+def _on_mousewheel(event):
+    main_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+main_canvas.bind_all("<MouseWheel>", _on_mousewheel)
+
+
+# virsraksts (centrēts)
 header = tk.Label(
-    window,
+    scrollable_frame,
     text="Welcome to our hotel database system",
     font=("Arial", 18, "bold")
 )
-header.pack(pady=10)
+header.pack(pady=15, anchor="center")
 
 
-#guests
-guest_block = tk.LabelFrame(window, text="Add a guest", padx=10, pady=5)
-guest_block.pack(fill="x", padx=20, pady=5)
+# guests
+guest_block = tk.LabelFrame(scrollable_frame, text="Add a guest", padx=15, pady=10)
+guest_block.pack(padx=20, pady=8, anchor="center")
 
-tk.Label(guest_block, text="Name").pack()
-guest_name_input = tk.Entry(guest_block, width=50)
-guest_name_input.pack(pady=2)
+tk.Label(guest_block, text="Name").pack(anchor="center")
+guest_name_input = tk.Entry(guest_block, width=45, justify="center")
+guest_name_input.pack(pady=2, anchor="center")
 
-tk.Label(guest_block, text="Surname").pack()
-guest_surname_input = tk.Entry(guest_block, width=50)
-guest_surname_input.pack(pady=2)
+tk.Label(guest_block, text="Surname").pack(anchor="center")
+guest_surname_input = tk.Entry(guest_block, width=45, justify="center")
+guest_surname_input.pack(pady=2, anchor="center")
 
-tk.Button(guest_block, text="Save", command=handle_add_guest).pack(pady=5)
+tk.Button(guest_block, text="Save", command=handle_add_guest, width=15).pack(pady=8, anchor="center")
 guest_result = tk.Label(guest_block, text="", fg="green")
-guest_result.pack()
+guest_result.pack(anchor="center")
 
 
-#rooms
-room_block = tk.LabelFrame(window, text="Add a room", padx=10, pady=5)
-room_block.pack(fill="x", padx=20, pady=5)
+# rooms
+room_block = tk.LabelFrame(scrollable_frame, text="Add a room", padx=15, pady=10)
+room_block.pack(padx=20, pady=8, anchor="center")
 
-tk.Label(room_block, text="Room number").pack()
-room_number_input = tk.Entry(room_block, width=50)
-room_number_input.pack(pady=2)
+tk.Label(room_block, text="Room number").pack(anchor="center")
+room_number_input = tk.Entry(room_block, width=45, justify="center")
+room_number_input.pack(pady=2, anchor="center")
 
-tk.Label(room_block, text="Availability (1 - available, 0 - not available)").pack()
-room_avail_input = tk.Entry(room_block, width=50)
+tk.Label(room_block, text="Availability (1 - available, 0 - not available)").pack(anchor="center")
+room_avail_input = tk.Entry(room_block, width=45, justify="center")
 room_avail_input.insert(0, "1")  # default value
-room_avail_input.pack(pady=2)
+room_avail_input.pack(pady=2, anchor="center")
 
-tk.Button(room_block, text="Save", command=handle_add_room).pack(pady=5)
+tk.Button(room_block, text="Save", command=handle_add_room, width=15).pack(pady=8, anchor="center")
 room_result = tk.Label(room_block, text="", fg="green")
-room_result.pack()
+room_result.pack(anchor="center")
 
 
-#staff
-staff_block = tk.LabelFrame(window, text="Add a staff member", padx=10, pady=5)
-staff_block.pack(fill="x", padx=20, pady=5)
+# staff
+staff_block = tk.LabelFrame(scrollable_frame, text="Add a staff member", padx=15, pady=10)
+staff_block.pack(padx=20, pady=8, anchor="center")
 
-tk.Label(staff_block, text="Name").pack()
-staff_name_input = tk.Entry(staff_block, width=50)
-staff_name_input.pack(pady=2)
+tk.Label(staff_block, text="Name").pack(anchor="center")
+staff_name_input = tk.Entry(staff_block, width=45, justify="center")
+staff_name_input.pack(pady=2, anchor="center")
 
-tk.Label(staff_block, text="Surname").pack()
-staff_surname_input = tk.Entry(staff_block, width=50)
-staff_surname_input.pack(pady=2)
+tk.Label(staff_block, text="Surname").pack(anchor="center")
+staff_surname_input = tk.Entry(staff_block, width=45, justify="center")
+staff_surname_input.pack(pady=2, anchor="center")
 
-tk.Label(staff_block, text="Job").pack()
-staff_job_input = tk.Entry(staff_block, width=50)
-staff_job_input.pack(pady=2)
+tk.Label(staff_block, text="Job").pack(anchor="center")
+staff_job_input = tk.Entry(staff_block, width=45, justify="center")
+staff_job_input.pack(pady=2, anchor="center")
 
-tk.Button(staff_block, text="Save", command=handle_add_staff).pack(pady=5)
+tk.Button(staff_block, text="Save", command=handle_add_staff, width=15).pack(pady=8, anchor="center")
 staff_result = tk.Label(staff_block, text="", fg="green")
-staff_result.pack()
+staff_result.pack(anchor="center")
 
-#orders
-order_block = tk.LabelFrame(window, text="Add an order", padx=10, pady=5)
-order_block.pack(fill="x", padx=20, pady=5)
 
-tk.Label(order_block, text="Guest ID").pack()
-order_guest_id = tk.Entry(order_block, width=50)
-order_guest_id.pack(pady=2)
+# orders
+order_block = tk.LabelFrame(scrollable_frame, text="Add an order", padx=15, pady=10)
+order_block.pack(padx=20, pady=8, anchor="center")
 
-tk.Label(order_block, text="Room number").pack()
-order_room_num = tk.Entry(order_block, width=50)
-order_room_num.pack(pady=2)
+tk.Label(order_block, text="Guest ID").pack(anchor="center")
+order_guest_id = tk.Entry(order_block, width=45, justify="center")
+order_guest_id.pack(pady=2, anchor="center")
 
-tk.Label(order_block, text="Staff ID").pack()
-order_staff_id = tk.Entry(order_block, width=50)
-order_staff_id.pack(pady=2)
+tk.Label(order_block, text="Room number").pack(anchor="center")
+order_room_num = tk.Entry(order_block, width=45, justify="center")
+order_room_num.pack(pady=2, anchor="center")  # Fixed here
 
-tk.Label(order_block, text="An order is complete (1 - yes, 0 - no)").pack()
-order_finished_input = tk.Entry(order_block, width=50)
+tk.Label(order_block, text="Staff ID").pack(anchor="center")
+order_staff_id = tk.Entry(order_block, width=45, justify="center")
+order_staff_id.pack(pady=2, anchor="center")
+
+tk.Label(order_block, text="An order is complete (1 - yes, 0 - no)").pack(anchor="center")
+order_finished_input = tk.Entry(order_block, width=45, justify="center")
 order_finished_input.insert(0, "1")
-order_finished_input.pack(pady=2)
+order_finished_input.pack(pady=2, anchor="center")
 
-tk.Button(order_block, text="Save", command=handle_add_order).pack(pady=5)
+tk.Button(order_block, text="Save", command=handle_add_order, width=15).pack(pady=8, anchor="center")
 order_result = tk.Label(order_block, text="", fg="green")
-order_result.pack()
+order_result.pack(anchor="center")
 
-#palais aplikāciju
+# palaiz aplikāciju
 window.mainloop()
