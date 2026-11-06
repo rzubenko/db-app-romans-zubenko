@@ -14,7 +14,7 @@ ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("green")
 
 app = ctk.CTk()
-app.title("Hotel Database (Modern)")
+app.title("Hotel Database")
 app.geometry("650x750")
 
 app.iconbitmap("assets/images/hotel.ico")
