@@ -1,7 +1,29 @@
-# Lai palaistu:
-## Instalējiet visu un palaidiet app.py
-# Viesnīcas aplikācija ar datubāzes palīdzību
+# Hotel Database Application
+This application is made to help database employers maintain hotel work.
+## Description
+Application uses SQL databases for work. 
+## Installation
+To install, go to the main folder and install app.py and funkcijas.py. Then run app.py.
+## Usage
+When running the program, you will see the main screen.
+![Alt text for the image](assets/images/main1.png)
+![Alt text for the image](assets/images/main2.png)
+
+You can view all of the added rooms.
+![Alt text for the image](assets/images/rooms.png)
+
+You can view all of the orders
+![Alt text for the image](assets/images/orders.png)
+
+You can view all the staff
+![Alt text for the image](assets/images/staff.png)
+
+## Contributing
+If you want to contribute, submit your update suggestions to romanszubenko1@gmail.com
+## License
+This project is licensed under the MIT License
+
+## Contact
+romanszubenko1@gmail.com
+
 ![Alt text for the image](assets/images/db_sketch.png)
-### No sākuma es izveidoju visus nepieciešamus failus, pievienoju README.md. Pēc tam uzrakstīju main.py, pamatojoties uz tā faila, kuru rakstījām klasē, lai saprastu jaunas datubāzes izkārtojumu. Ar MI palīdzību, izmainīju app.py un funkcijas.py, lai tie atbilstu manai lietotnei.
-#### Saruna ar MI ir pievienota assets mapē. (MI_saruna_RZubenko)
-#### Pievienot otro cilni, kur paradīsies informācija
