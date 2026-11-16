@@ -26,7 +26,7 @@ This project is licensed under the MIT License
 
 ## Contact
 romanszubenko1@gmail.com
-
+* * *
 ### Additional info
 Here is the sketch of the databases of the project.
 ![Alt text for the image](assets/images/db_sketch.png)
