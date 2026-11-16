@@ -12,11 +12,11 @@ When running the program, you will see the main screen.
 You can view all of the added rooms.
 ![Alt text for the image](assets/images/rooms.png)
 
-You can view all of the orders
-![Alt text for the image](assets/images/orders.png)
-
 You can view all the staff
 ![Alt text for the image](assets/images/staff.png)
+
+You can view all of the orders
+![Alt text for the image](assets/images/orders.png)
 
 ## Contributing
 If you want to contribute, submit your update suggestions to romanszubenko1@gmail.com
@@ -26,4 +26,6 @@ This project is licensed under the MIT License
 ## Contact
 romanszubenko1@gmail.com
 
+### Additional info
+Here is the sketch of the databases of the project.
 ![Alt text for the image](assets/images/db_sketch.png)
