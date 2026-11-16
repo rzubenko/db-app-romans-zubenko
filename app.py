@@ -107,16 +107,16 @@ def handle_add_guest():
 
 def handle_add_room():
     room_num = room_number_input.get()
-    avail = room_avail_input.get()
+    avail = 1 if room_avail_input.get() == "Available" else 0
 
     try:
-        add_room(int(room_num), int(avail))
+        add_room(int(room_num), avail)
         room_number_input.delete(0, "end")
-        room_avail_input.delete(0, "end")
+        room_avail_input.set("Available")
         room_result.configure(text="Istaba veiksmīgi pievienota!", text_color="#2ecc71")
         refresh_all()
     except ValueError:
-        room_result.configure(text="Kļūda! Numuriem jābūt cipariem.", text_color="#e74c3c")
+        room_result.configure(text="Kļūda! Istabas numuram jābūt skaitlim.", text_color="#e74c3c")
 
 def handle_add_staff():
     name = staff_name_input.get()
@@ -136,14 +136,14 @@ def handle_add_staff():
 def handle_add_order():
     g_id = order_guest_id.get()
     r_num = order_room_num.get()
-    finished = order_finished_input.get()
+    finished = 1 if order_finished_input.get() == "Yes" else 0
     s_id = order_staff_id.get()
 
     try:
-        add_order(int(g_id), int(r_num), int(finished), int(s_id))
+        add_order(int(g_id), int(r_num), finished, int(s_id))
         order_guest_id.delete(0, "end")
         order_room_num.delete(0, "end")
-        order_finished_input.delete(0, "end")
+        order_finished_input.set("Yes")
         order_staff_id.delete(0, "end")
         order_result.configure(text="Pasūtījums veiksmīgi pievienots!", text_color="#2ecc71")
         refresh_all()
@@ -214,9 +214,9 @@ ctk.CTkLabel(room_block, text="Room number").pack()
 room_number_input = ctk.CTkEntry(room_block, width=400)
 room_number_input.pack(pady=2)
 
-ctk.CTkLabel(room_block, text="Availability (1 - available, 0 - not available)").pack()
-room_avail_input = ctk.CTkEntry(room_block, width=400)
-room_avail_input.insert(0, "1")
+ctk.CTkLabel(room_block, text="Availability").pack()
+room_avail_input = ctk.CTkOptionMenu(room_block, width=400, values=["Available", "Not available"])
+room_avail_input.set("Available")
 room_avail_input.pack(pady=2)
 
 ctk.CTkButton(room_block, text="Save", command=handle_add_room).pack(pady=12)
@@ -265,9 +265,9 @@ ctk.CTkLabel(order_block, text="Staff ID").pack()
 order_staff_id = ctk.CTkEntry(order_block, width=400)
 order_staff_id.pack(pady=2)
 
-ctk.CTkLabel(order_block, text="An order is complete (1 - yes, 0 - no)").pack()
-order_finished_input = ctk.CTkEntry(order_block, width=400)
-order_finished_input.insert(0, "1")
+ctk.CTkLabel(order_block, text="An order is complete").pack()
+order_finished_input = ctk.CTkOptionMenu(order_block, width=400, values=["Yes", "No"])
+order_finished_input.set("Yes")
 order_finished_input.pack(pady=2)
 
 ctk.CTkButton(order_block, text="Save", command=handle_add_order).pack(pady=12)
