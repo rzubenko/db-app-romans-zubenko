@@ -13,6 +13,7 @@ You can view all of the added rooms.
 ![Alt text for the image](assets/images/rooms.png)
 
 You can view all the staff
+
 ![Alt text for the image](assets/images/staff.png)
 
 You can view all of the orders
