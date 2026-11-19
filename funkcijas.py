@@ -1,6 +1,6 @@
 import sqlite3
 
-# New database file, because the old hotel.db has the old 4-table structure
+#jaunais datubāzes fails, ar 10 tabulām
 DB_FILE = "hotel_system.db"
 
 
@@ -10,21 +10,6 @@ def connect():
     database.execute("PRAGMA foreign_keys = ON")
     return database
 
-
-# ---------------------------------------------------------------
-# DATABASE SCHEMA (11 tables)
-#
-# Column types:
-#   text   - free text            int    - whole number
-#   real   - decimal number       date   - text in YYYY-MM-DD format
-#   bool   - dropdown, saved as 1 / 0 (labels = (text for 1, text for 0))
-#   choice - dropdown with fixed choices
-#   fk     - dropdown filled from another table (ref = that table)
-#
-# "display" is the SQL used to show a record of that table in dropdowns
-# and in other tables ({t} is replaced with the table alias).
-# The order of the tables matters: referenced tables come first.
-# ---------------------------------------------------------------
 def col(name, label, kind="text", **options):
     return {"name": name, "label": label, "type": kind, **options}
 
@@ -80,7 +65,7 @@ TABLES = {
             col("service_price", "Price (€)", "real"),
         ],
     },
-    # 5  (room number is typed in by the user, so it is the primary key)
+    # 5  (room number ir primary key, jo lietotājs pats to ievada)
     "rooms": {
         "singular": "Room",
         "plural": "Rooms",
@@ -196,7 +181,7 @@ SQL_TYPES = {
 }
 
 
-# izveidojam tabulas
+#izveidojam tabulas
 def create_tables():
     database = connect()
     cursor = database.cursor()
@@ -235,7 +220,7 @@ def create_tables():
     database.close()
 
 
-# funkcijas
+#funkcijas
 def add_record(table, values):
     """Inserts one record. `values` is a dict {column_name: value}.
     Raises sqlite3.IntegrityError if the record breaks a rule

@@ -13,7 +13,7 @@ from funkcijas import (
 
 create_tables()
 
-# Iestatām modernu izskatu
+#Iestatām modernu izskatu
 ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("green")
 
@@ -27,7 +27,7 @@ SUCCESS_COLOR = "#2ecc71"
 ERROR_COLOR = "#e74c3c"
 NO_DATA = "— add records first —"
 
-# White dropdown style (dark text so it stays readable in dark mode too)
+#Veidojam dropdown izskatu
 DROPDOWN_STYLE = {
     "fg_color": "white",
     "button_color": "white",
@@ -38,13 +38,9 @@ DROPDOWN_STYLE = {
     "dropdown_text_color": "black",
 }
 
-# forms[table] = {"inputs": {column_name: widget}, "result": label}
 forms = {}
 
-
-# ---------------------------------------------------------------
-# HELPERS FOR THE VIEW TAB
-# ---------------------------------------------------------------
+#Palīglīdzekļi cilnām
 def format_value(column, value):
     """Turns a database value into text for the table."""
     if value is None:
@@ -111,10 +107,7 @@ def refresh_all():
     refresh_dropdowns()
     refresh_view()
 
-
-# ---------------------------------------------------------------
-# FUNKCIJAS DATU PIEVIENOŠANAI (one set of functions for all tables)
-# ---------------------------------------------------------------
+#funkcijas datu pievienošanai
 def read_form(table):
     """Reads and checks the form. Returns (values, error_message)."""
     spec = TABLES[table]
@@ -250,24 +243,18 @@ def build_form_block(parent, table):
     forms[table] = {"inputs": inputs, "result": result}
     reset_form(table)
 
-
-# ---------------------------------------------------------------
-# TABS AT THE TOP
-# ---------------------------------------------------------------
+#cilnu dizains
 tabs = ctk.CTkTabview(app)
 tabs.pack(fill="both", expand=True, padx=10, pady=10)
 
-tab_add = tabs.add("Add Data")      # the original design lives here
+tab_add = tabs.add("Add Data")      #oriģinālais dizains šeit
 tab_view = tabs.add("View Data")
 
-# Refresh the tables and dropdowns every time the user switches tabs
+#Atjaunot cilnes katru reizi, kad lietotājs kaut ko maina
 tabs.configure(command=refresh_all)
 
-
-# ---------------------------------------------------------------
-# ADD DATA TAB
-# ---------------------------------------------------------------
-# Ritināms konteiners visam saturam (iebūvēts CustomTkinter rīks)
+#ADD DATA TAB
+#ritināms konteiners visam saturam (iebūvēts CustomTkinter rīks)
 scrollable_frame = ctk.CTkScrollableFrame(tab_add, width=580, height=650)
 scrollable_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
@@ -279,14 +266,11 @@ header = ctk.CTkLabel(
 )
 header.pack(pady=(10, 20))
 
-# One block for every table in the database
+#Viens bloks katrai tabulai
 for table_name in TABLES:
     build_form_block(scrollable_frame, table_name)
 
-
-# ---------------------------------------------------------------
-# VIEW DATA TAB
-# ---------------------------------------------------------------
+#VIEW DATA TAB
 plural_to_table = {spec["plural"]: name for name, spec in TABLES.items()}
 
 ctk.CTkLabel(
@@ -306,8 +290,8 @@ view_table = ctk.CTkScrollableFrame(tab_view)
 view_table.pack(fill="both", expand=True, padx=5, pady=5)
 
 
-# Fill the dropdowns and the table with existing data on startup
+#aizpildīt dropdown ar eksistējošo informāciju no tabulām
 refresh_all()
 
-# Palaiz aplikāciju
+#palaiž aplikāciju
 app.mainloop()
