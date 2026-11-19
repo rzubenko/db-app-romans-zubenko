@@ -1,14 +1,14 @@
+import sqlite3
+from datetime import date, datetime
+
 import customtkinter as ctk
 from funkcijas import (
+    TABLES,
     create_tables,
-    add_guest,
-    add_room,
-    add_staff,
-    add_order,
-    get_guests,
-    get_rooms,
-    get_staff,
-    get_orders
+    add_record,
+    get_records,
+    get_options,
+    visible_columns
 )
 
 create_tables()
@@ -23,14 +23,45 @@ app.geometry("650x750")
 
 app.iconbitmap("assets/images/hotel.ico")
 
+SUCCESS_COLOR = "#2ecc71"
+ERROR_COLOR = "#e74c3c"
+NO_DATA = "— add records first —"
+
+# White dropdown style (dark text so it stays readable in dark mode too)
+DROPDOWN_STYLE = {
+    "fg_color": "white",
+    "button_color": "white",
+    "button_hover_color": "#e5e5e5",
+    "text_color": "black",
+    "dropdown_fg_color": "white",
+    "dropdown_hover_color": "#e5e5e5",
+    "dropdown_text_color": "black",
+}
+
+# forms[table] = {"inputs": {column_name: widget}, "result": label}
+forms = {}
+
 
 # ---------------------------------------------------------------
-# HELPERS FOR THE VIEW TABS
+# HELPERS FOR THE VIEW TAB
 # ---------------------------------------------------------------
+def format_value(column, value):
+    """Turns a database value into text for the table."""
+    if value is None:
+        return ""
+    if column["type"] == "bool":
+        return column["labels"][0] if value else column["labels"][1]
+    if column["type"] == "real":
+        return f"{float(value):.2f}"
+    return value
+
+
 def fill_table(frame, headers, rows):
     """Clears the frame and draws a table with the given headers and rows."""
     for widget in frame.winfo_children():
         widget.destroy()
+    for col in range(20):
+        frame.grid_columnconfigure(col, weight=0)
 
     for col, title in enumerate(headers):
         ctk.CTkLabel(
@@ -53,102 +84,171 @@ def fill_table(frame, headers, rows):
             )
 
 
-def yes_no(value):
-    return "Yes" if value else "No"
+def refresh_view():
+    table = plural_to_table[view_selector.get()]
+    columns = visible_columns(table)
+    rows = [
+        [format_value(column, value) for column, value in zip(columns, record)]
+        for record in get_records(table)
+    ]
+    fill_table(view_table, [column["label"] for column in columns], rows)
 
 
-def make_view_tab(parent, title):
-    """Creates the title + scrollable table area for a view tab."""
-    ctk.CTkLabel(
-        parent, text=title, font=ctk.CTkFont(size=15, weight="bold")
-    ).pack(pady=(5, 5))
-    table = ctk.CTkScrollableFrame(parent)
-    table.pack(fill="both", expand=True, padx=5, pady=5)
-    return table
+def refresh_dropdowns():
+    """Reloads the options of every dropdown that is filled from another table."""
+    for table, form in forms.items():
+        for column in TABLES[table]["columns"]:
+            if column["type"] != "fk":
+                continue
+            widget = form["inputs"][column["name"]]
+            options = get_options(column["ref"]) or [NO_DATA]
+            current = widget.get()
+            widget.configure(values=options)
+            widget.set(current if current in options else options[0])
 
 
 def refresh_all():
-    fill_table(guests_table, ["ID", "Name", "Surname"], get_guests())
-
-    fill_table(
-        rooms_table,
-        ["Room number", "Available"],
-        [(num, yes_no(avail)) for num, avail in get_rooms()]
-    )
-
-    fill_table(staff_table, ["ID", "Name", "Surname", "Job"], get_staff())
-
-    fill_table(
-        orders_table,
-        ["Order ID", "Guest", "Room", "Finished", "Staff member"],
-        [
-            (oid, f"{gname} {gsurname}", room, yes_no(done), f"{sname} {ssurname}")
-            for oid, gname, gsurname, room, done, sname, ssurname in get_orders()
-        ]
-    )
+    refresh_dropdowns()
+    refresh_view()
 
 
 # ---------------------------------------------------------------
-# FUNKCIJAS DATU PIEVIENOŠANAI
-# (they use the input widgets, so they must live in this file)
+# FUNKCIJAS DATU PIEVIENOŠANAI (one set of functions for all tables)
 # ---------------------------------------------------------------
-def handle_add_guest():
-    name = guest_name_input.get()
-    surname = guest_surname_input.get()
+def read_form(table):
+    """Reads and checks the form. Returns (values, error_message)."""
+    spec = TABLES[table]
+    values = {}
 
-    if name and surname:
-        add_guest(name, surname)
-        guest_name_input.delete(0, "end")
-        guest_surname_input.delete(0, "end")
-        guest_result.configure(text="Klients veiksmīgi pievienots!", text_color="#2ecc71")
-        refresh_all()
-    else:
-        guest_result.configure(text="Lūdzu aizpildiet visus laukus!", text_color="#e74c3c")
+    for column in spec["columns"]:
+        name = column["name"]
+        label = column["label"]
+        kind = column["type"]
+        raw = forms[table]["inputs"][name].get().strip()
 
-def handle_add_room():
-    room_num = room_number_input.get()
-    avail = 1 if room_avail_input.get() == "Available" else 0
+        if kind == "bool":
+            values[name] = 1 if raw == column["labels"][0] else 0
+            continue
+
+        if kind == "fk":
+            if raw == NO_DATA:
+                ref_name = TABLES[column["ref"]]["plural"]
+                return None, f"Kļūda! Vispirms pievienojiet ierakstu: {ref_name}."
+            values[name] = int(raw.split(" - ")[0])
+            continue
+
+        if kind == "choice":
+            values[name] = raw
+            continue
+
+        if raw == "":
+            if column.get("optional"):
+                values[name] = None
+                continue
+            return None, "Lūdzu aizpildiet visus laukus!"
+
+        try:
+            if kind == "int":
+                values[name] = int(raw)
+            elif kind == "real":
+                values[name] = float(raw.replace(",", "."))
+            elif kind == "date":
+                datetime.strptime(raw, "%Y-%m-%d")
+                values[name] = raw
+            else:
+                values[name] = raw
+        except ValueError:
+            if kind == "date":
+                return None, f"Kļūda! «{label}» jābūt datumam formātā GGGG-MM-DD."
+            return None, f"Kļūda! «{label}» jābūt skaitlim."
+
+    if "date_order" in spec:
+        start, end = spec["date_order"]
+        if values[end] < values[start]:
+            return None, "Kļūda! Izbraukšanas datums nevar būt pirms iebraukšanas datuma."
+
+    return values, None
+
+
+def reset_form(table):
+    """Clears the text fields and puts dropdowns back to their first choice."""
+    for column in TABLES[table]["columns"]:
+        widget = forms[table]["inputs"][column["name"]]
+        kind = column["type"]
+
+        if kind in ("bool", "choice"):
+            widget.set(widget.cget("values")[0])
+        elif kind != "fk":
+            widget.delete(0, "end")
+            if kind == "date":
+                widget.insert(0, date.today().isoformat())
+
+
+def handle_save(table):
+    result = forms[table]["result"]
+    values, error = read_form(table)
+
+    if error:
+        result.configure(text=error, text_color=ERROR_COLOR)
+        return
 
     try:
-        add_room(int(room_num), avail)
-        room_number_input.delete(0, "end")
-        room_avail_input.set("Available")
-        room_result.configure(text="Istaba veiksmīgi pievienota!", text_color="#2ecc71")
-        refresh_all()
-    except ValueError:
-        room_result.configure(text="Kļūda! Istabas numuram jābūt skaitlim.", text_color="#e74c3c")
+        add_record(table, values)
+    except sqlite3.IntegrityError:
+        result.configure(text="Kļūda! Šāds ieraksts jau pastāv.", text_color=ERROR_COLOR)
+        return
 
-def handle_add_staff():
-    name = staff_name_input.get()
-    surname = staff_surname_input.get()
-    job = staff_job_input.get()
+    reset_form(table)
+    result.configure(text=TABLES[table]["success"], text_color=SUCCESS_COLOR)
+    refresh_all()
 
-    if name and surname and job:
-        add_staff(name, surname, job)
-        staff_name_input.delete(0, "end")
-        staff_surname_input.delete(0, "end")
-        staff_job_input.delete(0, "end")
-        staff_result.configure(text="Personāls veiksmīgi pievienots!", text_color="#2ecc71")
-        refresh_all()
-    else:
-        staff_result.configure(text="Lūdzu aizpildiet visus laukus!", text_color="#e74c3c")
 
-def handle_add_order():
-    g_id = order_guest_id.get()
-    r_num = order_room_num.get()
-    finished = 1 if order_finished_input.get() == "Yes" else 0
-    s_id = order_staff_id.get()
+def build_form_block(parent, table):
+    """Builds one 'Add a ...' block with the same look for every table."""
+    spec = TABLES[table]
+    article = "an" if spec["singular"][0] in "AEIOU" else "a"
 
-    try:
-        add_order(int(g_id), int(r_num), finished, int(s_id))
-        order_guest_id.delete(0, "end")
-        order_room_num.delete(0, "end")
-        order_finished_input.set("Yes")
-        order_staff_id.delete(0, "end")
-        order_result.configure(text="Pasūtījums veiksmīgi pievienots!", text_color="#2ecc71")
-        refresh_all()
-    except ValueError:
-        order_result.configure(text="Kļūda! ID un istabai jābūt cipariem.", text_color="#e74c3c")
+    block = ctk.CTkFrame(parent)
+    block.pack(fill="x", padx=10, pady=10)
+
+    ctk.CTkLabel(
+        block,
+        text=f"Add {article} {spec['singular']}",
+        font=ctk.CTkFont(size=15, weight="bold")
+    ).pack(pady=(12, 5))
+
+    inputs = {}
+    for column in spec["columns"]:
+        ctk.CTkLabel(block, text=column["label"]).pack()
+        kind = column["type"]
+
+        if kind == "bool":
+            widget = ctk.CTkOptionMenu(
+                block, width=400, values=list(column["labels"]), **DROPDOWN_STYLE
+            )
+        elif kind == "choice":
+            widget = ctk.CTkOptionMenu(
+                block, width=400, values=column["choices"], **DROPDOWN_STYLE
+            )
+        elif kind == "fk":
+            widget = ctk.CTkOptionMenu(
+                block, width=400, values=[NO_DATA], **DROPDOWN_STYLE
+            )
+        else:
+            widget = ctk.CTkEntry(block, width=400)
+
+        widget.pack(pady=2)
+        inputs[column["name"]] = widget
+
+    ctk.CTkButton(
+        block, text="Save", command=lambda t=table: handle_save(t)
+    ).pack(pady=12)
+
+    result = ctk.CTkLabel(block, text="")
+    result.pack(pady=(0, 10))
+
+    forms[table] = {"inputs": inputs, "result": result}
+    reset_form(table)
 
 
 # ---------------------------------------------------------------
@@ -158,23 +258,18 @@ tabs = ctk.CTkTabview(app)
 tabs.pack(fill="both", expand=True, padx=10, pady=10)
 
 tab_add = tabs.add("Add Data")      # the original design lives here
-tab_guests = tabs.add("Guests")
-tab_rooms = tabs.add("Rooms")
-tab_staff = tabs.add("Staff")
-tab_orders = tabs.add("Orders")
+tab_view = tabs.add("View Data")
 
-guests_table = make_view_tab(tab_guests, "All Guests")
-rooms_table = make_view_tab(tab_rooms, "All Rooms")
-staff_table = make_view_tab(tab_staff, "All Staff Members")
-orders_table = make_view_tab(tab_orders, "All Orders")
-
-# Refresh the tables every time the user switches tabs
+# Refresh the tables and dropdowns every time the user switches tabs
 tabs.configure(command=refresh_all)
 
+
+# ---------------------------------------------------------------
+# ADD DATA TAB
+# ---------------------------------------------------------------
 # Ritināms konteiners visam saturam (iebūvēts CustomTkinter rīks)
 scrollable_frame = ctk.CTkScrollableFrame(tab_add, width=580, height=650)
 scrollable_frame.pack(fill="both", expand=True, padx=10, pady=10)
-
 
 # Virsraksts
 header = ctk.CTkLabel(
@@ -184,98 +279,34 @@ header = ctk.CTkLabel(
 )
 header.pack(pady=(10, 20))
 
-
-# --- GUEST BLOCK ---
-guest_block = ctk.CTkFrame(scrollable_frame)
-guest_block.pack(fill="x", padx=10, pady=10)
-
-ctk.CTkLabel(guest_block, text="Add a Guest", font=ctk.CTkFont(size=15, weight="bold")).pack(pady=(12, 5))
-
-ctk.CTkLabel(guest_block, text="Name").pack()
-guest_name_input = ctk.CTkEntry(guest_block, width=400)
-guest_name_input.pack(pady=2)
-
-ctk.CTkLabel(guest_block, text="Surname").pack()
-guest_surname_input = ctk.CTkEntry(guest_block, width=400)
-guest_surname_input.pack(pady=2)
-
-ctk.CTkButton(guest_block, text="Save", command=handle_add_guest).pack(pady=12)
-guest_result = ctk.CTkLabel(guest_block, text="")
-guest_result.pack(pady=(0, 10))
+# One block for every table in the database
+for table_name in TABLES:
+    build_form_block(scrollable_frame, table_name)
 
 
-# --- ROOM BLOCK ---
-room_block = ctk.CTkFrame(scrollable_frame)
-room_block.pack(fill="x", padx=10, pady=10)
+# ---------------------------------------------------------------
+# VIEW DATA TAB
+# ---------------------------------------------------------------
+plural_to_table = {spec["plural"]: name for name, spec in TABLES.items()}
 
-ctk.CTkLabel(room_block, text="Add a Room", font=ctk.CTkFont(size=15, weight="bold")).pack(pady=(12, 5))
+ctk.CTkLabel(
+    tab_view, text="Choose a table", font=ctk.CTkFont(size=15, weight="bold")
+).pack(pady=(5, 5))
 
-ctk.CTkLabel(room_block, text="Room number").pack()
-room_number_input = ctk.CTkEntry(room_block, width=400)
-room_number_input.pack(pady=2)
+view_selector = ctk.CTkOptionMenu(
+    tab_view,
+    width=300,
+    values=list(plural_to_table),
+    command=lambda _value: refresh_view(),
+    **DROPDOWN_STYLE
+)
+view_selector.pack(pady=5)
 
-ctk.CTkLabel(room_block, text="Availability").pack()
-room_avail_input = ctk.CTkOptionMenu(room_block, width=400, values=["Available", "Not available"])
-room_avail_input.set("Available")
-room_avail_input.pack(pady=2)
-
-ctk.CTkButton(room_block, text="Save", command=handle_add_room).pack(pady=12)
-room_result = ctk.CTkLabel(room_block, text="")
-room_result.pack(pady=(0, 10))
-
-
-# --- STAFF BLOCK ---
-staff_block = ctk.CTkFrame(scrollable_frame)
-staff_block.pack(fill="x", padx=10, pady=10)
-
-ctk.CTkLabel(staff_block, text="Add a Staff Member", font=ctk.CTkFont(size=15, weight="bold")).pack(pady=(12, 5))
-
-ctk.CTkLabel(staff_block, text="Name").pack()
-staff_name_input = ctk.CTkEntry(staff_block, width=400)
-staff_name_input.pack(pady=2)
-
-ctk.CTkLabel(staff_block, text="Surname").pack()
-staff_surname_input = ctk.CTkEntry(staff_block, width=400)
-staff_surname_input.pack(pady=2)
-
-ctk.CTkLabel(staff_block, text="Job").pack()
-staff_job_input = ctk.CTkEntry(staff_block, width=400)
-staff_job_input.pack(pady=2)
-
-ctk.CTkButton(staff_block, text="Save", command=handle_add_staff).pack(pady=12)
-staff_result = ctk.CTkLabel(staff_block, text="")
-staff_result.pack(pady=(0, 10))
+view_table = ctk.CTkScrollableFrame(tab_view)
+view_table.pack(fill="both", expand=True, padx=5, pady=5)
 
 
-# --- ORDER BLOCK ---
-order_block = ctk.CTkFrame(scrollable_frame)
-order_block.pack(fill="x", padx=10, pady=10)
-
-ctk.CTkLabel(order_block, text="Add an Order", font=ctk.CTkFont(size=15, weight="bold")).pack(pady=(12, 5))
-
-ctk.CTkLabel(order_block, text="Guest ID").pack()
-order_guest_id = ctk.CTkEntry(order_block, width=400)
-order_guest_id.pack(pady=2)
-
-ctk.CTkLabel(order_block, text="Room number").pack()
-order_room_num = ctk.CTkEntry(order_block, width=400)
-order_room_num.pack(pady=2)
-
-ctk.CTkLabel(order_block, text="Staff ID").pack()
-order_staff_id = ctk.CTkEntry(order_block, width=400)
-order_staff_id.pack(pady=2)
-
-ctk.CTkLabel(order_block, text="An order is complete").pack()
-order_finished_input = ctk.CTkOptionMenu(order_block, width=400, values=["Yes", "No"])
-order_finished_input.set("Yes")
-order_finished_input.pack(pady=2)
-
-ctk.CTkButton(order_block, text="Save", command=handle_add_order).pack(pady=12)
-order_result = ctk.CTkLabel(order_block, text="")
-order_result.pack(pady=(0, 10))
-
-
-# Fill the tables with existing data on startup
+# Fill the dropdowns and the table with existing data on startup
 refresh_all()
 
 # Palaiz aplikāciju
